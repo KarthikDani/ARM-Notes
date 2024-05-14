@@ -1,0 +1,95 @@
+# ARM Processor Fundamentals
+
+![ARM Core Dataflow model](images/clipboard-2131792242.png)
+
+**Load Store Architecture** - Data isn't directly manipulated in memory, either it is copied from memory to registers (Load) or registers to memory (Store)
+
+-   **Sign extend** - converts unsigned 8 or 16 bit values to 32 bit as read from memory and placed in register.
+
+-   Source operands (Rn, Rm) read from internal buses A and B when ARM instruction given
+
+-   ALU and MAC (Multiply Accumulate Unit), then directly Rd is written or Load Store instrx used to generate address to be held in **address register.** Rm can also be preprocessed by **Barrel shifter and ALU + Barrel shifter** can do work
+
+-   Load store intrx use incrementer that updates address register before next read/write is performed on address register.
+
+## Registers
+
+All registers are 32 bit. Total **18 active registers. 16 data** (r0 to r15) **and 2 process status registers (cpsr and spsr).**
+
+-   **r13** - stack pointer (sp) - stores address of **head of the stack** in current processor mode.
+
+-   **r14 -** link register (lr) - contains **return address** when subroutine is called
+
+-   r15 - program counter (pc) - contains **address of next instruction**
+
+-   r0 to r13 - orthogonal - any instruction can be applied equally to any register.
+
+![](images/clipboard-1444326251.png)
+
+## Current Program Status Register
+
+cpsr is divided is also divided into the above as 4 fields - flags, status, extension & control of each 4 bits wide \[middle two for future use\]
+
+### Processor modes
+
+Total 7 processor modes
+
+-   **Privileged mode:**
+
+    -   Abort mode - failed attempt to access memory.
+
+    -   Fast interrupt request & Interrupt request mode - two levels of interrupt.
+
+    -   Supervisor mode - mode after reset (OS kernel operates in this mode)
+
+    -   System - full read write access to cpsr (special kind of user mode)
+
+    -   undefined - invalid instruction
+
+-   **Non privileged mode:** user mode - for programs and applications
+
+### Banked Registers
+
+![](images/clipboard-2994918086.png)
+
+Of these, **20 registers are hidden** from program at different times - Called **Banked Registers.**
+
+> If processor mode is changed, the banked register from new mode will replace the existing register.
+
+-   Every processor mode except 'user' mode can directly write to mode bits of cpsr. And Every processor mode except 'system' mode has subset associated banked registers of the main 16 registers
+
+-   For user mode, Registers are mapped 'one to one and onto'
+
+![](images/clipboard-3988591377.png)
+
+> The processor mode can be changed when program writes to cpsr or the hardware when core responds an exception or an interrupt
+
+The exceptions and interrupts that cause mode change are:
+
+*rest, interrupt request, fast interrupt request, software interrupt, data abort, prefetch abort, undefined instrx.*
+
+*spsr_irq* stores the prvious program's *cpsr. **spsr*** **isn't available in user mode, it's only available in privileged mode.**
+
+> **Saving of cpsr only occurs at exception or interrupt.** it cant happen when mode change is forced when a program directly writes into cpsr
+
+![](images/clipboard-3175168345.png)
+
+> When power is applied to the core, it starts in *supervisor mode*
+
+## State and Instruction sets
+
+3 instruction sets: ARM, Thumb and Jazelle.
+
+J (Jazelle) and T (Thumb) bits in cpsr, reflect state of the processor. When both of them are zero, the processor is in ARM state.
+
+Once in thumb state, processor executes Thumb 16 bit instrx only and so on for other states.
+
+Jazelle executes 8 bit instrx, which is hybrid of software and hardware - to speed up Java bytecodes. To execute Java bytecodes it requires JVM. Hardware portion of Jazelle supports only a subset of Java bytecodes, rest is emulated in software.
+
+![![](images/clipboard-2702123373.png)](images/clipboard-3479812249.png)
+
+## Interrupt Masks
+
+Two levels: IRQ and FIQ
+
+**cpsr** - **contains 2 mask bits** - *7 and 6 (I and F).* I bit masks IRQ set to binary 1, and F masks FIQ when set to binary 1
